@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'components/profile.dart';
+import 'components/rewards.dart';
+import 'components/task.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,8 +21,8 @@ class _HomePage extends State<HomePage> {
 
   static final List<Widget> _pages = <Widget>[
     Profile(),
-    Text('Tarefas', style: TextStyle(fontSize: 24)),
-    Text('Recompensas', style: TextStyle(fontSize: 24)),
+    TaskScreen(),
+    RewardScreen(),
   ];
 
   @override
