@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_quirino/components/login.dart';
 import 'package:projeto_quirino/services/auth_service.dart';
-import 'package:projeto_quirino/components/success_toaster.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -30,8 +29,6 @@ class _ProfileState extends State<Profile> {
       _nameController.text,
       _passwordController.text,
     );
-
-    SuccessToaster(message: 'Perfil atualizado com sucesso');
   }
 
   @override
