@@ -14,6 +14,7 @@ class _TelaRegister extends State<TelaRegister> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final AuthService _authService = AuthService();
 
   bool _isLoading = false;
@@ -25,6 +26,7 @@ class _TelaRegister extends State<TelaRegister> {
         final user = await _authService.register(
           _emailController.text.trim(),
           _passwordController.text.trim(),
+          _nameController.text.trim(),
         );
 
         if (user != null) {
@@ -54,6 +56,14 @@ class _TelaRegister extends State<TelaRegister> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Nome'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Digite o nome';
+                  return null;
+                },
+              ),
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: 'E-mail'),
