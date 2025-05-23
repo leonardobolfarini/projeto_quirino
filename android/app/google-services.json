@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "378931177356",
+    "project_id": "taskompensas2025",
+    "storage_bucket": "taskompensas2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:378931177356:android:7c1ae3c3eeaad4e19218a9",
+        "android_client_info": {
+          "package_name": "com.example.projeto_quirino"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR92GXTj7JKxvJ3TePStwhyYvY4L6wlrU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
