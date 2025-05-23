@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_quirino/home.dart';
+import 'package:projeto_quirino/components/login.dart';
 import 'package:projeto_quirino/services/auth_service.dart';
-import 'package:projeto_quirino/components/register.dart';
 
-class TelaLogin extends StatefulWidget {
-  const TelaLogin({super.key});
+class TelaRegister extends StatefulWidget {
+  const TelaRegister({super.key});
 
   @override
-  _TelaLogin createState() => _TelaLogin();
+  _TelaRegister createState() => _TelaRegister();
 }
 
-class _TelaLogin extends State<TelaLogin> {
+class _TelaRegister extends State<TelaRegister> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -18,11 +18,11 @@ class _TelaLogin extends State<TelaLogin> {
 
   bool _isLoading = false;
 
-  void _login() async {
+  void _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        final user = await _authService.login(
+        final user = await _authService.register(
           _emailController.text.trim(),
           _passwordController.text.trim(),
         );
@@ -46,7 +46,7 @@ class _TelaLogin extends State<TelaLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      appBar: AppBar(title: Text('Cadastro')),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(
@@ -78,15 +78,18 @@ class _TelaLogin extends State<TelaLogin> {
               SizedBox(height: 32),
               _isLoading
                   ? CircularProgressIndicator()
-                  : ElevatedButton(onPressed: _login, child: Text('Entrar')),
-              SizedBox(height: 16),
+                  : ElevatedButton(
+                    onPressed: _register,
+                    child: Text('Cadastrar'),
+                  ),
+
               TextButton(
                 onPressed:
                     () => Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => TelaRegister()),
+                      MaterialPageRoute(builder: (context) => TelaLogin()),
                     ),
-                child: Text('Não tem uma conta? Cadastre-se'),
+                child: Text('Já tem uma conta? Faça login'),
               ),
             ],
           ),

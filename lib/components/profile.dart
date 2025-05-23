@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_quirino/components/login.dart';
+import 'package:projeto_quirino/services/auth_service.dart';
 
-class Profile extends StatelessWidget {
+class Profile extends StatefulWidget {
   const Profile({super.key});
+
+  @override
+  State<Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<Profile> {
+  final AuthService _authService = AuthService();
+
+  void _logout() {
+    _authService.logout();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => TelaLogin()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +88,7 @@ class Profile extends StatelessWidget {
                       ),
 
                       ElevatedButton(
-                        onPressed: () => {},
+                        onPressed: _logout,
                         child: Icon(Icons.logout, color: Colors.red),
                       ),
                     ],
