@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_quirino/components/login.dart';
 import 'package:projeto_quirino/services/auth_service.dart';
+import 'package:projeto_quirino/components/success_toaster.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -10,6 +11,9 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final AuthService _authService = AuthService();
 
   void _logout() {
@@ -18,6 +22,25 @@ class _ProfileState extends State<Profile> {
       context,
       MaterialPageRoute(builder: (context) => TelaLogin()),
     );
+  }
+
+  void _updateProfile() {
+    _authService.userUpdate(
+      _emailController.text,
+      _nameController.text,
+      _passwordController.text,
+    );
+
+    SuccessToaster(message: 'Perfil atualizado com sucesso');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _authService.userChanges.listen((user) {
+      _emailController.text = user?.email ?? '';
+      _nameController.text = user?.displayName ?? '';
+    });
   }
 
   @override
@@ -50,17 +73,19 @@ class _ProfileState extends State<Profile> {
                   SizedBox(height: 16),
                   TextField(
                     decoration: InputDecoration(
-                      labelText: 'Nome',
+                      labelText: _nameController.text,
                       border: OutlineInputBorder(),
                     ),
+                    controller: _nameController,
                   ),
                   SizedBox(height: 16),
 
                   TextField(
                     decoration: InputDecoration(
-                      labelText: 'Email',
+                      labelText: _emailController.text,
                       border: OutlineInputBorder(),
                     ),
+                    controller: _emailController,
                   ),
                   SizedBox(height: 16),
 
@@ -70,6 +95,7 @@ class _ProfileState extends State<Profile> {
                       labelText: 'Senha',
                       border: OutlineInputBorder(),
                     ),
+                    controller: _passwordController,
                   ),
                   SizedBox(height: 16),
 
@@ -81,9 +107,14 @@ class _ProfileState extends State<Profile> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurpleAccent,
                         ),
-                        child: Text(
-                          'Atualizar',
-                          style: TextStyle(color: Colors.white),
+                        child: TextButton(
+                          onPressed: () {
+                            _updateProfile();
+                          },
+                          child: Text(
+                            'Atualizar',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
 
