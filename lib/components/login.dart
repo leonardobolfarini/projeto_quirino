@@ -34,9 +34,18 @@ class _TelaLogin extends State<TelaLogin> {
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString(), style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
       } finally {
         setState(() => _isLoading = false);
       }
