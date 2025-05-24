@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'components/profile.dart';
 import 'components/rewards.dart';
 import 'components/task.dart';
+import 'services/database_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,6 +12,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePage extends State<HomePage> {
+  final DatabaseService _db = DatabaseService();
+
   int _currentIndexPage = 0;
 
   void _onChangePage(int index) {
@@ -24,6 +27,20 @@ class _HomePage extends State<HomePage> {
     TaskScreen(),
     RewardScreen(),
   ];
+
+  int _userPoints = 0;
+  int _userStreak = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _db.getUserStats().listen((data) {
+      setState(() {
+        _userPoints = data['points'] as int;
+        _userStreak = data['streak'] as int;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +57,24 @@ class _HomePage extends State<HomePage> {
                 color: Colors.white,
               ),
             ),
-            Icon(Icons.local_fire_department_rounded, color: Colors.white),
+            Row(
+              children: [
+                Icon(Icons.monetization_on_rounded, color: Colors.white),
+                Text(
+                  _userPoints.toString(),
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Icon(Icons.local_fire_department_rounded, color: Colors.white),
+                Text(
+                  _userStreak.toString(),
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
           ],
         ),
       ),
