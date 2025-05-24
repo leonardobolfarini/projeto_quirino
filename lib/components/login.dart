@@ -53,49 +53,83 @@ class _TelaLogin extends State<TelaLogin> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Login')),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'E-mail'),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Digite o e-mail';
-                  if (!value.contains('@')) return 'E-mail inválido';
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Senha'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Digite a senha';
-                  if (value.length < 6) return 'Mínimo 6 caracteres';
-                  return null;
-                },
-              ),
-              SizedBox(height: 32),
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(onPressed: _login, child: Text('Entrar')),
-              SizedBox(height: 16),
-              TextButton(
-                onPressed:
-                    () => Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => TelaRegister()),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.grey[200],
+    body: Center(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_outline, size: 80, color: Colors.indigo),
+            SizedBox(height: 16),
+            Text('Bem-vindo de volta!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            SizedBox(height: 32),
+            Card(
+              elevation: 6,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'E-mail',
+                          prefixIcon: Icon(Icons.email),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Digite o e-mail';
+                          if (!value.contains('@')) return 'E-mail inválido';
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Senha',
+                          prefixIcon: Icon(Icons.lock),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Digite a senha';
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: _isLoading
+                              ? CircularProgressIndicator(color: Colors.white)
+                              : Text('Entrar', style: TextStyle(fontSize: 18)),
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => TelaRegister()),
+                          );
+                        },
+                        child: Text("Não tem conta? Cadastre-se"),
+                        )
+                      ],
                     ),
-                child: Text('Não tem uma conta? Cadastre-se'),
+                  ),
+                ),
               ),
             ],
           ),
