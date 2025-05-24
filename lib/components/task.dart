@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/database_service.dart';
 
 class Task {
+  String id;
   String title;
   String description;
   int points;
+  bool completed;
 
-  Task({required this.title, required this.description, required this.points});
+  Task({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.points,
+    this.completed = false,
+  });
+
+  factory Task.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Task(
+      id: doc.id,
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      points: data['points'] ?? 0,
+      completed: data['completed'] ?? false,
+    );
+  }
 }
 
 class TaskScreen extends StatefulWidget {
@@ -16,11 +37,7 @@ class TaskScreen extends StatefulWidget {
 }
 
 class _TaskScreenState extends State<TaskScreen> {
-  final List<Task> _tasks = [
-    Task(title: 'Estudar Flutter', description: 'Avançar no projeto', points: 20),
-    Task(title: 'Lavar louça', description: 'Ajuda em casa', points: 10),
-  ];
-
+  final DatabaseService _db = DatabaseService();
   bool _fabExpanded = false;
 
   void _toggleFab() {
@@ -57,14 +74,10 @@ class _TaskScreenState extends State<TaskScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                if (title.isNotEmpty && description.isNotEmpty && int.tryParse(pointsStr) != null) {
-                  setState(() {
-                    _tasks.add(Task(
-                      title: title,
-                      description: description,
-                      points: int.parse(pointsStr),
-                    ));
-                  });
+                if (title.isNotEmpty &&
+                    description.isNotEmpty &&
+                    int.tryParse(pointsStr) != null) {
+                  _db.createTask(title, description, int.parse(pointsStr));
                   Navigator.pop(context);
                 }
               },
@@ -82,21 +95,34 @@ class _TaskScreenState extends State<TaskScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Remover Tarefa'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: _tasks.asMap().entries.map((entry) {
-              final index = entry.key;
-              final task = entry.value;
-              return ListTile(
-                title: Text(task.title),
-                subtitle: Text(task.description),
-                trailing: const Icon(Icons.delete),
-                onTap: () {
-                  setState(() => _tasks.removeAt(index));
-                  Navigator.pop(context);
-                },
+          content: StreamBuilder<QuerySnapshot>(
+            stream: _db.getUserTasks(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final tasks =
+                  snapshot.data!.docs
+                      .map((doc) => Task.fromFirestore(doc))
+                      .toList();
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children:
+                    tasks.map((task) {
+                      return ListTile(
+                        title: Text(task.title),
+                        subtitle: Text(task.description),
+                        trailing: const Icon(Icons.delete),
+                        onTap: () {
+                          _db.deleteTask(task.id);
+                          Navigator.pop(context);
+                        },
+                      );
+                    }).toList(),
               );
-            }).toList(),
+            },
           ),
         );
       },
@@ -104,21 +130,125 @@ class _TaskScreenState extends State<TaskScreen> {
   }
 
   void _editTask() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Função de edição ainda não implementada')),
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Selecionar Tarefa'),
+          content: StreamBuilder<QuerySnapshot>(
+            stream: _db.getUserTasks(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final tasks =
+                  snapshot.data!.docs
+                      .map((doc) => Task.fromFirestore(doc))
+                      .toList();
+
+              if (tasks.isEmpty) {
+                return const Text('Nenhuma tarefa encontrada');
+              }
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children:
+                    tasks.map((task) {
+                      return ListTile(
+                        title: Text(task.title),
+                        subtitle: Text(task.description),
+                        trailing: Text('${task.points} pontos'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showEditDialog(task);
+                        },
+                      );
+                    }).toList(),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildTaskCard(Task task) {
+  void _showEditDialog(Task task) {
+    String title = task.title;
+    String description = task.description;
+    String pointsStr = task.points.toString();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Editar Tarefa'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(labelText: 'Título'),
+                controller: TextEditingController(text: title),
+                onChanged: (value) => title = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Descrição'),
+                controller: TextEditingController(text: description),
+                onChanged: (value) => description = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Pontos'),
+                keyboardType: TextInputType.number,
+                controller: TextEditingController(text: pointsStr),
+                onChanged: (value) => pointsStr = value,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (title.isNotEmpty &&
+                    description.isNotEmpty &&
+                    int.tryParse(pointsStr) != null) {
+                  _db.updateTask(
+                    task.id,
+                    title,
+                    description,
+                    int.parse(pointsStr),
+                  );
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget buildTaskCard(Task task) {
     return Card(
-      child: ListTile(
-        title: Text(task.title),
-        subtitle: Text(task.description),
-        trailing: CircleAvatar(
-          backgroundColor: Colors.blue.shade200,
-          child: Text(
-            task.points.toString(),
-            style: const TextStyle(color: Colors.black),
+      child: InkWell(
+        onTap: () => _db.completeTask(task.id),
+        child: ListTile(
+          title: Text(
+            task.title,
+            style: TextStyle(
+              decoration: task.completed ? TextDecoration.lineThrough : null,
+            ),
+          ),
+          subtitle: Text(task.description),
+          trailing: CircleAvatar(
+            backgroundColor: Colors.blue.shade200,
+            child: Text(
+              task.points.toString(),
+              style: const TextStyle(color: Colors.black),
+            ),
           ),
         ),
       ),
@@ -131,9 +261,37 @@ class _TaskScreenState extends State<TaskScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Minhas Tarefas', style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            'Minhas Tarefas',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: 16),
-          for (final task in _tasks) _buildTaskCard(task),
+          StreamBuilder<QuerySnapshot>(
+            stream: _db.getUserTasks(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(child: Text('Erro: ${snapshot.error}'));
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final tasks =
+                  snapshot.data?.docs
+                      .map((doc) => Task.fromFirestore(doc))
+                      .toList() ??
+                  [];
+
+              if (tasks.isEmpty) {
+                return const Center(child: Text('Nenhuma tarefa encontrada'));
+              }
+
+              return Column(
+                children: tasks.map((task) => buildTaskCard(task)).toList(),
+              );
+            },
+          ),
         ],
       ),
       floatingActionButton: Column(
@@ -145,31 +303,31 @@ class _TaskScreenState extends State<TaskScreen> {
               heroTag: 'addTask',
               mini: true,
               onPressed: _addTask,
-              child: const Icon(Icons.add),
               tooltip: 'Adicionar',
+              child: const Icon(Icons.add),
             ),
             const SizedBox(height: 8),
             FloatingActionButton(
               heroTag: 'editTask',
               mini: true,
               onPressed: _editTask,
-              child: const Icon(Icons.edit),
               tooltip: 'Editar',
+              child: const Icon(Icons.edit),
             ),
             const SizedBox(height: 8),
             FloatingActionButton(
               heroTag: 'removeTask',
               mini: true,
               onPressed: _removeTask,
-              child: const Icon(Icons.delete),
               tooltip: 'Remover',
+              child: const Icon(Icons.delete),
             ),
             const SizedBox(height: 8),
           ],
           FloatingActionButton(
             onPressed: _toggleFab,
-            child: Icon(_fabExpanded ? Icons.close : Icons.menu),
             tooltip: 'Menu',
+            child: Icon(_fabExpanded ? Icons.close : Icons.menu),
           ),
         ],
       ),
