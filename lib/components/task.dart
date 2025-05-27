@@ -39,6 +39,7 @@ class TaskScreen extends StatefulWidget {
 class _TaskScreenState extends State<TaskScreen> {
   final DatabaseService _db = DatabaseService();
   bool _fabExpanded = false;
+  final Map<String, bool> _processingTasks = {};
 
   void _toggleFab() {
     setState(() => _fabExpanded = !_fabExpanded);
@@ -232,9 +233,32 @@ class _TaskScreenState extends State<TaskScreen> {
   }
 
   Widget buildTaskCard(Task task) {
+    final isProcessing = _processingTasks[task.id] ?? false;
+
     return Card(
       child: InkWell(
-        onTap: () => _db.completeTask(task.id),
+        onTap:
+            isProcessing
+                ? null
+                : () async {
+                  setState(() {
+                    _processingTasks[task.id] = true;
+                  });
+
+                  try {
+                    if (task.completed) {
+                      await _db.uncompleteTask(task.id);
+                    } else {
+                      await _db.completeTask(task.id);
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _processingTasks[task.id] = false;
+                      });
+                    }
+                  }
+                },
         child: ListTile(
           title: Text(
             task.title,
@@ -243,12 +267,29 @@ class _TaskScreenState extends State<TaskScreen> {
             ),
           ),
           subtitle: Text(task.description),
-          trailing: CircleAvatar(
-            backgroundColor: Colors.blue.shade200,
-            child: Text(
-              task.points.toString(),
-              style: const TextStyle(color: Colors.black),
-            ),
+          trailing: Stack(
+            alignment: Alignment.center,
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.blue.shade200,
+                child:
+                    isProcessing
+                        ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.black,
+                            ),
+                          ),
+                        )
+                        : Text(
+                          task.points.toString(),
+                          style: const TextStyle(color: Colors.black),
+                        ),
+              ),
+            ],
           ),
         ),
       ),

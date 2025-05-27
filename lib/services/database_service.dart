@@ -66,6 +66,29 @@ class DatabaseService {
     }
   }
 
+  Future<void> uncompleteTask(String taskId) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final taskDoc =
+          await _db
+              .collection('users')
+              .doc(user.uid)
+              .collection('tasks')
+              .doc(taskId)
+              .get();
+
+      if (taskDoc.exists) {
+        final taskData = taskDoc.data() as Map<String, dynamic>;
+        final points = taskData['points'] as int;
+
+        await taskDoc.reference.update({'completed': false});
+
+        await updateUserPoints(-points);
+        await incrementStreak();
+      }
+    }
+  }
+
   Future<void> createReward(
     String title,
     String description,
